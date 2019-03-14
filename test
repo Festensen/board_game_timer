@@ -1,0 +1,286 @@
+import tkinter as tk
+import tkinter.ttk as ttk
+import time
+import sys
+import random
+
+
+class StopWatch(tk.Frame, ttk.Button):
+    """ Implements first frame widgets. """
+
+    def __init__(self, parent=None, **kw):
+        tk.Frame.__init__(self, parent, kw, bg="lightblue")
+        self.columnconfigure(0, pad=3)
+        self.columnconfigure(1, pad=3)
+        self.columnconfigure(2, pad=3)
+        self.columnconfigure(3, pad=3)
+
+        self.rowconfigure(0, pad=3)
+        self.rowconfigure(1, pad=3)
+        self.rowconfigure(2, pad=3)
+        self.rowconfigure(3, pad=3)
+        self.rowconfigure(4, pad=3)
+
+
+
+
+        self._start = 0.0
+        self._elapsedtime = 0.0
+        self._running = 0
+        self.timestr = tk.StringVar()
+        self.Player_active_init()
+
+        self.setup_frame = tk.IntVar()
+        self.playercount = tk.StringVar()
+        self.playervalue = tk.IntVar()
+        self.final_playercount = tk.StringVar()
+        self.final_playercount_save = 2
+
+    def makeWidgets(self):
+        """ settings player widgets. """
+
+        self.frame_test = tk.Frame(self,slave=None, bg="black")
+        self.frame_test.pack(fill=tk.BOTH, expand=1)
+        self.frame_test.grid(row=0, column=0, sticky='nswe')
+        l = ttk.Label(self, textvariable=self.timestr, foreground="black", background="lightblue", font=("Helvetica", 12))
+        self._setTime(self._elapsedtime)
+        l.grid(column=0, row=0)
+        ttk.Button(text='⏯️',  command=self.Start_stop).grid(column=1, row=2)
+        ttk.Button(text='Reset', command=self.Reset).grid(column=3, row=2)
+
+    def _update(self):
+        """ Update the label with elapsed time. """
+        self._elapsedtime = time.time() - self._start
+        self._setTime(self._elapsedtime)
+        self._timer = self.after(50, self._update)
+
+    def _setTime(self, elap):
+        """ Set the time string to Minutes:Seconds:Hundreths """
+        minutes = int(elap / 60)
+        seconds = int(elap - minutes * 60.0)
+        hseconds = int((elap - minutes * 60.0 - seconds) * 100)
+        self.timestr.set('%02d:%02d:%02d' % (minutes, seconds, hseconds))
+
+    def Start(self):
+        """ Start the stopwatch, ignore if running. """
+        if not self._running:
+            self._start = time.time() - self._elapsedtime
+            self._update()
+            self._running = 1
+            #self.stop_but.grid_remove()
+            #self.start_but = ttk.Button(self, text='Start', command=self.Stop).grid(column=2, row=2)
+
+    def Stop(self):
+        """ Stop the stopwatch, ignore if stopped. """
+        if self._running:
+            self.after_cancel(self._timer)
+            self._elapsedtime = time.time() - self._start
+            self._setTime(self._elapsedtime)
+            self._running = 0
+            #self.start_but.grid_remove()
+            #self.stop_but = ttk.Button(self, text='> / | |', command=self.Start).grid(column=2, row=2)
+
+    def Start_stop(self):
+        if self._running:
+            StopWatch.Stop(self)
+        elif not self._running:
+                StopWatch.Start(self)
+
+    def Reset(self):
+        """ Reset the stopwatch. """
+        self._start = time.time()
+        self._elapsedtime = 0.0
+        self._setTime(self._elapsedtime)
+
+    def Widget_setup_1(self):
+        """ creates first options widgets """
+        self.setup_frame = tk.Frame(height=2, bd=1, borderwidth=2, bg="black", relief="sunken",)
+        self.xa = 1
+        self.xb = 1
+        self.selectlabel_1 = ttk.Label(self, text="Select number of players: ")
+        self.selectlabel_1.grid(column=self.xa + 1, row=self.xb)
+        self.playercount = tk.Spinbox(self, values=(1,2,3,4,5,6,7,8,9,10), width=3)
+        self.playercount.grid(column=self.xa + 2, row=self.xb)
+        self.playervalue = ttk.Button(self, text='Next', command=self.Final_playercounter)
+        self.playervalue.grid(column=self.xa + 3, row=self.xb)
+
+        self.ya = 1
+        self.yb = 2
+        self.selectlabel_2 = ttk.Label(self, text="Select turn order type: ")
+        self.selectlabel_2.grid(column=self.ya + 1, row=self.yb)
+        self.turn_order_type = tk.IntVar()
+        self.turn_order_type_1 = ttk.Radiobutton(self, text="Table: Clockwise", variable=self.turn_order_type, value=1)
+        self.turn_order_type_1.grid(column=self.ya + 2, row=self.yb)
+        self.turn_order_type_2 = ttk.Radiobutton(self, text="Table: Counter-Clockwise", variable=self.turn_order_type, value=2)
+        self.turn_order_type_2.grid(column=self.ya + 2, row=self.yb + 1)
+        self.turn_order_type_3 = ttk.Radiobutton(self, text="Variable Turn-order", variable=self.turn_order_type, value=3)
+        self.turn_order_type_3.grid(column=self.ya + 2, row=self.yb + 2)
+
+    def Widget_setup_2(self):
+        """ creates second options widgets """
+        self.yb = 1
+
+    def Final_playercounter(self):
+        """ decides player count, exports, and removes setup widgets """
+
+        self.final_playercount = self.playercount.get()
+
+
+        self.playercount.grid_remove()
+        self.playervalue.grid_remove()
+        self.selectlabel_1.grid_remove()
+        self.selectlabel_2.grid_remove()
+
+        self.turn_order_type_1.grid_remove()
+        self.turn_order_type_2.grid_remove()
+        self.turn_order_type_3.grid_remove()
+        self.Player_active_update()
+
+    def Player_active_init(self):
+        self.p_10 = False
+        self.p_09 = False
+        self.p_08 = False
+        self.p_07 = False
+        self.p_06 = False
+        self.p_05 = False
+        self.p_04 = False
+        self.p_03 = False
+        self.p_02 = False
+        self.p_01 = False
+
+    def Player_active_update(self):
+
+        self.final_playercount_save = self.final_playercount
+        for x in range(0, int(self.final_playercount)):
+            if int(self.final_playercount) > 0:
+
+                player_name = "Player" + str(self.final_playercount) + " "
+                if int(self.final_playercount) == 10:
+                    self.p_10 = True
+                if int(self.final_playercount) == 9:
+                    self.p_09 = True
+                if int(self.final_playercount) == 8:
+                    self.p_08 = True
+                if int(self.final_playercount) == 7:
+                    self.p_07 = True
+                if int(self.final_playercount) == 6:
+                    self.p_06 = True
+                if int(self.final_playercount) == 5:
+                    self.p_05 = True
+                if int(self.final_playercount) == 4:
+                    self.p_04 = True
+                if int(self.final_playercount) == 3:
+                    self.p_03 = True
+                if int(self.final_playercount) == 2:
+                    self.p_02 = True
+                if int(self.final_playercount) == 1:
+                    self.p_01 = True
+                sys.stdout.write(player_name)
+                self.final_playercount = int(self.final_playercount) - 1
+
+        self.final_playercount = self.final_playercount_save
+
+        if self.p_10:
+            sys.stdout.write("p_10 exists! ")
+        if self.p_09:
+            sys.stdout.write("p_09 exist! ")
+        if self.p_08:
+            sys.stdout.write("p_08 exist! ")
+        if self.p_07:
+            sys.stdout.write("p_07 exist! ")
+        if self.p_06:
+            sys.stdout.write("p_06 exist! ")
+        if self.p_05:
+            sys.stdout.write("p_05 exist! ")
+        if self.p_04:
+            sys.stdout.write("p_04 exist! ")
+        if self.p_03:
+            sys.stdout.write("p_03 exist! ")
+        if self.p_02:
+            sys.stdout.write("p_02 exist! ")
+        if self.p_01:
+            sys.stdout.write("p_01 exist! ")
+        self.makeWidgets()
+
+
+
+"""""""""
+class Player(tk.Frame):
+    def __init__(self, player_number):
+        self.player_number = player_number
+"""""""""
+
+
+""""""""""
+    def Create(self):
+        StopWatch.final_playercount = int(StopWatch.final_playercount)
+        for x in range(0, StopWatch.final_playercount):
+            if StopWatch.final_playercount > 0:
+                player_number = "Player " + str(StopWatch.final_playercount)
+                newPlayer = Player(self, player_number)
+                sys.stdout.write(newPlayer)
+                StopWatch.final_playercount = StopWatch.final_playercount - 1
+"""""""""
+
+
+   # def Create_p1(self):
+
+
+
+def main():
+
+    root = tk.Tk()
+    root.geometry('650x650')
+    root.title("Board Game Timer")
+
+    root.rowconfigure(2, weight=1)
+    root.columnconfigure(2, weight=1)
+#    root.pack(pady=100, padx=100)
+    s = ttk.Style()
+    s.theme_use("vista")
+
+    sw = StopWatch(root)
+    sw.Widget_setup_1()
+
+
+    sw.grid(column=0, row=0, pady=2, padx=2)
+#    sw.columnconfigure(0, weight=1)
+#    sw.rowconfigure(0, weight=1)
+#    sw.pack(pady=100, padx=100)
+
+
+
+ #   ttk.Button(root, text='start', command=sw.Start).grid(column=3, row=3)
+ #   ttk.Button(root, text='stop', command=sw.Stop).grid(column=3, row=4)
+
+
+
+    ttk.Button(root, text='Quit', command=root.quit).grid(column=3, row=10)
+
+    """
+    tkvar = tk.StringVar(root)
+    choices = {"\033[1;32;40m Bright Green  \n", 'Lasagne', 'Fries', 'Fish', 'Potatoe'}
+    tkvar.set('Pizza')
+    popupMenu = tk.OptionMenu(mainframe, tkvar, *choices)
+    tk.Label(mainframe, text="Choose a dish").grid(row=1, column=1)
+    popupMenu.grid(row=2, column=1)
+    """
+
+
+
+
+
+
+
+
+
+
+    root.mainloop()
+
+
+
+
+
+
+if __name__ == '__main__':
+    main()
